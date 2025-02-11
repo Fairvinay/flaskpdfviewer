@@ -1,0 +1,6 @@
+Flask
+Werkzeug
+PyMuPDF
+gunicorn
+PYPDF2
+Flask-Cors

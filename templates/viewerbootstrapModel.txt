@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	 <meta name="google" content="notranslate">
+    <title>PDF Viewer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='pdf-viewer.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+      <style>
+    .todown { 
+      display:inline-block;
+      color:#444;
+      border:1px solid #CCC;
+      background:#DDD;
+      box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+      cursor:pointer;
+      vertical-align:middle;
+      max-width: 100px;
+      padding: 5px;
+      text-align: center;
+    }
+    body {
+      background-color: #808080;
+      margin: 0;
+      padding: 0;
+    }
+    #viewerContainer {
+      overflow: auto;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+    .pdfFixedDiv{
+     position: fixed;
+	 bottom: 10px;
+	 left: 40%;
+	}
+	button {
+  		background-color: #7C9DD6;
+  		border: none;
+  		color: white;
+  		padding: 8px;
+  		text-align: center;
+  		text-decoration: none;
+  		display: inline-block;
+  		font-size: 60%;
+	}
+	input {
+		padding: 7px;
+		text-align: center;
+		text-decoration: none;
+		font-size: 50%;
+		width: 8%;
+	}
+	button:hover {
+		cursor: pointer;
+	}
+  </style> 
+    <link rel="stylesheet" href="{{ url_for('static', filename='pdf_viewer.css') }}">
+      <script   type="text/javascript" src="{{ url_for('static', filename='pdf.js') }}" ></script> 
+      <!--  <script  type="text/javascript" src="{{ url_for('static', filename='./build5.01/pdf.mjs') }}"  type="module"></script> 
+  <script  type="text/javascript"  src="{{ url_for('static', filename='./web/pdf_viewer.mjs') }}" type="module"></script>-->
+     <script   type="text/javascript" src="{{ url_for('static', filename='js/ShowModal.js') }}" type="module"></script> 
+   <script   type="text/javascript" src="{{ url_for('static', filename='pdf_viewer.js') }}" ></script> 
+
+  <script type="text/javascript" src="{{ url_for('static', filename='js/jspdf.js') }}"   ></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='libs/adler32cs.js') }}" ></script>
+ <script type="text/javascript" src="{{ url_for('static', filename='libs/FileSaver.js') }}"  ></script>
+   <script type="text/javascript" src="{{ url_for('static', filename='libs/BlobBuilder.js') }}"  ></script> 
+  <script type="text/javascript" src="{{ url_for('static', filename='plugins/addimage.js') }}"   ></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='plugins/standard_fonts_metrics.js') }}"  ></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='plugins/split_text_to_size.js') }}"  ></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='plugins/from_html.js') }}"  ></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/basic.js') }}" ></script>
+  <script  type="text/javascript" src="{{ url_for('static', filename='viewerajax.js') }}"  ></script> 
+</head>
+<body>
+    <h6>Viewing: {{ filename }}</h6>
+    <!-- Button trigger modal -->
+	<div style ="display:none;"> 
+	<button id="credButton" type="button" class="btn btn-primary" data-toggle="modal" data-target="#mySmallModalLabel"><!--"#exampleModal" -->
+	  Launch demo modal
+	</button>
+	</div>
+	<!-- Modal -->
+	<div class="modal fade bd-example-modal-sm" id="mySmallModalLabel" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+	  <div class="modal-dialog modal-sm">
+	    <div class="modal-content">
+	     <div class="modal-body">
+	           <div class="form-group">
+	            <label for="password" class="col-form-label">File Password</label>
+	            <input type="password" name="password" class="form-control" id="password">
+	          </div>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-secondary" data-dismiss="modal">OK</button>
+	        <!--<button type="button" class="btn btn-primary">Save changes</button>-->
+	      </div>
+	    </div>
+	  </div>
+	</div>
+    <div id='viewerContainer'>
+  		  <div id='pdfViewer' class='pdfViewer pdf-view-wrapper'></div>
+ 	     <div  class='pdfFixedDiv'>
+  			<button id='pdfZoominbutton'>zoom in</button>
+  			<button id='pdfZoomOutbutton'>zoom out</button>
+  			<button id='pdfRotatebutton'>rotate</button>
+  		<!--	<button id='pdfDownload'>download</button>-->
+  			<input type='text' id='pdfInput' placeholder='Go to page'></input>
+  		    <div style="display:none"> 
+	          <button id='hidDecrypt'>process </button>
+ 		    </div>
+            <div id="target"> </div>
+           <button id="download2">Press</button>  <!-- <button id="download1">PDF download</button>  <div id="todown" class="todown">Download</div> -->
+        </div>
+   </div>
+    	<!--  <div id="pdf-viewer"></div> --> 
+    
+    
+   
+    <a href="{{ url_for('serve_pdf', filename=filename) }}" download="{{ filename }}">
+        <button>Download PDF</button>
+    </a>
+      <br>
+    <h2>Remove Password</h2>
+    <input type="password" id="pdf-password" placeholder="Enter PDF Password">
+    <button id="remove-password">Remove Password</button>
+    <script>
+    	const encodedFilename = encodeURIComponent("{{ filename }}");
+    	  const url = "{{ url_for('serve_pdf', filename='__FILENAME__') }}".replace('__FILENAME__', encodedFilename);
+       //const url = "{{ url_for('serve_pdf', filename=filename) }}";
+         var DEFAULT_URL =  "{{ url_for('serve_pdf', filename='__FILENAME__') }}".replace('__FILENAME__', encodedFilename);
+        console.log("Fetching PDF from:", url); // Debugging log
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        
+        var zoominbutton = document.getElementById("pdfZoominbutton");
+		var zoomoutbutton = document.getElementById("pdfZoomOutbutton");
+		var rotatebutton = document.getElementById("pdfRotatebutton");
+		var container = document.getElementById('viewerContainer');
+		var viewer = document.getElementById('pdfViewer');
+		var input = document.getElementById("pdfInput");
+		var DEFAULT_SCALE_SIZE = .15;
+
+
+		// (Optionally) enable hyperlinks within PDF files.
+		var pdfLinkService = new pdfjsViewer.PDFLinkService();
+
+		var pdfDowloader= '';
+		var pdfViewer = new pdfjsViewer.PDFViewer({
+		  container: container,
+		  viewer: viewer,
+		  linkService: pdfLinkService,
+		});
+		if (!pdfjsLib.getDocument || !pdfjsViewer.DownloadManager) {
+		  alert("Download not imported");
+		}
+		else{
+		  pdfDowloader  =  new pdfjsViewer.DownloadManager({
+		     downloadUrl :"{{ url_for('serve_pdf', filename=filename) }}"
+		   }); 
+		}
+
+		pdfLinkService.setViewer(pdfViewer);
+
+		document.addEventListener('pagesinit', function () {
+		  // We can use pdfViewer now, e.g. let's change default scale.
+		  pdfViewer.currentScaleValue = 'auto';
+		});
+
+		// Loading document.
+		var loadingTask = pdfjsLib.getDocument({
+		  url: DEFAULT_URL,
+		});
+		 
+		loadingTask.promise.then(function(pdfDocument) {
+		  // Document loaded, specifying document for the viewer and
+		  // the (optional) linkService.
+		  pdfViewer.setDocument(pdfDocument);
+		  pdfLinkService.setDocument(pdfDocument, null);
+		  
+		});
+ 		loadingTask.onPassword = function (updatePassword, reason) { 
+		      if (reason === 1) { // need a password
+		      		 var credButton = document.getElementById("credButton");
+   							 //credButton.click();      
+   				   var mySmallModalLabel =    document.getElementById("mySmallModalLabel");   
+   				     var inHTML   = mySmallModalLabel.innerHTML;
+		    	//	var new_password=    prompt(inHTML);
+		    			 bootstrap.showModal({
+						    title: 'Credential',
+						    body:
+						        '<form><div class="form-group row mb-2">' +
+						        '<div class="col-3"><label for="text" class="col-form-label">Password</label></div>' +
+						        '<div class="col-9"><input type="password" class="form-control" id="text"/></div>' +
+						        '</div>' +
+						       /* '<div class="form-group row mb-2">' +
+						        '<div class="col-3"><label for="select" class="col-form-label">Select</label></div>' +
+						        '<div class="col-9"><select id="select" class="form-control">' +
+						        '<option value=""></option>' +
+						        '<option value="red">red</option><option value="green">green</option><option value="blue">blue</option>' +
+						        '</select></div>' +
+						        '</div>' +
+						        '<div class="form-group row">' +
+						        '<div class="col-3"><label for="textarea" class="col-form-label">Textarea</label></div>' +
+						        '<div class="col-9"><textarea id="textarea" rows="5" class="form-control"></textarea></div>' +
+						        '</div>'+
+						         */'</form>',
+						    footer: ' <button type="submit" class="btn btn-primary">OK</button>',
+						    onCreate: function (modal) {
+						        // create event handler for form submit and handle values
+						        modal.element.querySelector("button[type='submit']").addEventListener("click", function (event) {
+						            event.preventDefault()
+						            const formElement = modal.element.querySelector("form")
+						            global_password =   formElement.querySelector("#text").value
+						            /*bootstrap.showAlert({
+						                title: "Result",
+						                body:
+						                    "text: " + formElement.querySelector("#text").value + "<br/>" +
+						                    "select: " + formElement.querySelector("#select").value + "<br/>" +
+						                    "textarea: " + formElement.querySelector("#textarea").value
+						            })*/
+						            modal.hide()
+						        })
+						    }
+						})       
+		    	
+		    	
+		    	
+		        //  global_password = new_password;
+		    		updatePassword(global_password);
+		  		} else { // Invalid password
+		    	//	var new_password= prompt('Invalid! Please enter a password:');
+		    	
+		    	 bootstrap.showModal({
+						    title: 'Credential',
+						    body:
+						        '<form><div class="form-group row mb-2">' +
+						        '<div class="col-3"><label for="text" class="col-form-label">Invalid Password</label></div>' +
+						        '<div class="col-9"><input type="password" class="form-control" id="text"/></div>' +
+						        '</div>' +
+						       /* '<div class="form-group row mb-2">' +
+						        '<div class="col-3"><label for="select" class="col-form-label">Select</label></div>' +
+						        '<div class="col-9"><select id="select" class="form-control">' +
+						        '<option value=""></option>' +
+						        '<option value="red">red</option><option value="green">green</option><option value="blue">blue</option>' +
+						        '</select></div>' +
+						        '</div>' +
+						        '<div class="form-group row">' +
+						        '<div class="col-3"><label for="textarea" class="col-form-label">Textarea</label></div>' +
+						        '<div class="col-9"><textarea id="textarea" rows="5" class="form-control"></textarea></div>' +
+						        '</div>'+
+						         */'</form>',
+						    footer: ' <button type="submit" class="btn btn-primary">OK</button>',
+						    onCreate: function (modal) {
+						        // create event handler for form submit and handle values
+						        modal.element.querySelector("button[type='submit']").addEventListener("click", function (event) {
+						            event.preventDefault()
+						            const formElement = modal.element.querySelector("form")
+						            global_password =   formElement.querySelector("#text").value
+						            /*bootstrap.showAlert({
+						                title: "Result",
+						                body:
+						                    "text: " + formElement.querySelector("#text").value + "<br/>" +
+						                    "select: " + formElement.querySelector("#select").value + "<br/>" +
+						                    "textarea: " + formElement.querySelector("#textarea").value
+						            })*/
+						            modal.hide()
+						        })
+						    }
+						})       
+		    	
+		        // global_password = new_password;
+		    		updatePassword(global_password);
+		  		}
+		       // SEND for DECRYPT AT SERVER END 
+		      $("#hidDecrypt").trigger('click');
+		      
+		   };
+ 		   zoominbutton.onclick = function() {
+		        var newScale = pdfViewer.currentScale + DEFAULT_SCALE_SIZE;
+		        pdfViewer.currentScaleValue = newScale;
+		    }
+ 		    zoomoutbutton.onclick = function() {
+		        var newScale = pdfViewer.currentScale - DEFAULT_SCALE_SIZE ;
+		        pdfViewer.currentScaleValue = newScale;
+		    }
+ 		    rotatebutton.onclick = function() {
+		        var rotateVal = ((pdfViewer.pagesRotation+90) >= 360) ? 0 : pdfViewer.pagesRotation+90 ;
+		        console.log(rotateVal);
+		        pdfViewer.pagesRotation = rotateVal;
+		    }
+		    input.addEventListener("keyup", function(event) {
+		        var val = Number(input.value);
+		  		if (event.keyCode === 13 && val) {
+		    		// Cancel the default action, if needed
+		    		event.preventDefault();
+		    		if(val > pdfViewer.pagesCount)
+		    		{
+		    			val = pdfViewer.pagesCount;
+		    		} 
+		    		console.log(val);
+		    		pdfViewer.currentPageNumber = val;
+		  		}
+			});
+			
+			container.onscroll = function() {
+		    	input.value = pdfViewer.currentPageNumber;
+			}
+        $('#mySmallModalLabel').on('show.bs.modal', function (event) {
+		  var button = $(event.relatedTarget) // Button that triggered the modal
+		  var recipient = button.data('whatever') // Extract info from data-* attributes
+		  // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+		  // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+		  var modal = $(this)
+		    modal.find('.modal-title').text('New message to ' + recipient)
+		      modal.find('.modal-body input').val(recipient)
+		})
+	
+     	   
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "{{ url_for('static', filename='pdf.worker.js') }}";     // 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        pdfjsLib.getDocument(url).promise.then(pdf => {
+            pdf.getPage(1).then(page => {
+                const scale = 1.5;
+                const viewport = page.getViewport({ scale });
+                const canvas = document.createElement("canvas");
+                document.getElementById("pdfViewer").appendChild(canvas);
+                const context = canvas.getContext("2d");
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                const renderContext = { canvasContext: context, viewport: viewport };
+                page.render(renderContext);
+            });
+        }).catch(error => {
+            console.error("Error loading PDF:", error);
+        });
+        
+         $("#remove-password").click(function() {
+            let password = $("#pdf-password").val();
+            let formData = new FormData();
+            formData.append("file", new File([url], "{{ filename }}"));
+            formData.append("password", password);
+
+            $.ajax({
+                url: "https://adminstore53.pythonanywhere.com/remove_password",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    let blob = new Blob([response], { type: "application/pdf" });
+                    let newUrl = URL.createObjectURL(blob);
+                    window.open(newUrl, "_blank");
+                },
+                error: function() {
+                    alert("Failed to remove password. Please try again.");
+                }
+            });
+        });
+        
+    </script>
+    
+    <script>
+ /*   		  var DEFAULT_URL =  "{{ url_for('serve_pdf', filename=filename) }}" ; // 'E:/n/simpleChatApp/pdfViewer/pdf.pdf'; // '/pdf/pdf.pdf';
+		  var global_password ='';
+ 	   	if (!pdfjsLib.getDocument || !pdfjsViewer.PDFViewer) {
+ 		 alert("Library not imported");
+		}
+
+		pdfjsLib.GlobalWorkerOptions.workerSrc ="{{ url_for('static', filename='pdf.worker.js') }}";
+		var zoominbutton = document.getElementById("pdfZoominbutton");
+		var zoomoutbutton = document.getElementById("pdfZoomOutbutton");
+		var rotatebutton = document.getElementById("pdfRotatebutton");
+		var container = document.getElementById('viewerContainer');
+		var viewer = document.getElementById('pdfViewer');
+		var input = document.getElementById("pdfInput");
+		var DEFAULT_SCALE_SIZE = .15;
+
+
+		// (Optionally) enable hyperlinks within PDF files.
+		var pdfLinkService = new pdfjsViewer.PDFLinkService();
+
+		var pdfDowloader= '';
+		var pdfViewer = new pdfjsViewer.PDFViewer({
+		  container: container,
+		  viewer: viewer,
+		  linkService: pdfLinkService,
+		});
+		if (!pdfjsLib.getDocument || !pdfjsViewer.DownloadManager) {
+		  alert("Download not imported");
+		}
+		else{
+		  pdfDowloader  =  new pdfjsViewer.DownloadManager({
+		     downloadUrl :"{{ url_for('serve_pdf', filename=filename) }}"
+		   }); 
+		}
+
+		pdfLinkService.setViewer(pdfViewer);
+
+		document.addEventListener('pagesinit', function () {
+		  // We can use pdfViewer now, e.g. let's change default scale.
+		  pdfViewer.currentScaleValue = 'auto';
+		});
+
+		// Loading document.
+		var loadingTask = pdfjsLib.getDocument({
+		  url: DEFAULT_URL,
+		});
+		 
+		loadingTask.promise.then(function(pdfDocument) {
+		  // Document loaded, specifying document for the viewer and
+		  // the (optional) linkService.
+		  pdfViewer.setDocument(pdfDocument);
+		  pdfLinkService.setDocument(pdfDocument, null);
+		  
+		});
+ 		loadingTask.onPassword = function (updatePassword, reason) { 
+		      if (reason === 1) { // need a password
+		    		var new_password= prompt('Please enter a password:');
+		        global_password = new_password;
+		    		updatePassword(new_password);
+		  		} else { // Invalid password
+		    		var new_password= prompt('Invalid! Please enter a password:');
+		        global_password = new_password;
+		    		updatePassword(new_password);
+		  		}
+		       // SEND for DECRYPT AT SERVER END 
+		      $("#hidDecrypt").trigger('click');
+		      
+		   };
+ 		   zoominbutton.onclick = function() {
+		        var newScale = pdfViewer.currentScale + DEFAULT_SCALE_SIZE;
+		        pdfViewer.currentScaleValue = newScale;
+		    }
+ 		    zoomoutbutton.onclick = function() {
+		        var newScale = pdfViewer.currentScale - DEFAULT_SCALE_SIZE ;
+		        pdfViewer.currentScaleValue = newScale;
+		    }
+ 		    rotatebutton.onclick = function() {
+		        var rotateVal = ((pdfViewer.pagesRotation+90) >= 360) ? 0 : pdfViewer.pagesRotation+90 ;
+		        console.log(rotateVal);
+		        pdfViewer.pagesRotation = rotateVal;
+		    }
+		    input.addEventListener("keyup", function(event) {
+		        var val = Number(input.value);
+		  		if (event.keyCode === 13 && val) {
+		    		// Cancel the default action, if needed
+		    		event.preventDefault();
+		    		if(val > pdfViewer.pagesCount)
+		    		{
+		    			val = pdfViewer.pagesCount;
+		    		} 
+		    		console.log(val);
+		    		pdfViewer.currentPageNumber = val;
+		  		}
+			});
+			
+			container.onscroll = function() {
+		    	input.value = pdfViewer.currentPageNumber;
+			}
+		*/
+    </script>
+     <script data-ad-client="ca-pub-3329553162349654" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    
+   
+    
+</body>
+</html>
