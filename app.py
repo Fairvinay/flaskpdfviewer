@@ -48,7 +48,7 @@ def upload_success_pdf():
 	# * means all if need specific format then *.csv
 	latest_file = max(list_of_files, key=os.path.getctime)
 	print(latest_file)
-	unlok_pdfName =  latest_file.rsplit('\\',1)[1]
+	unlok_pdfName =  latest_file.rsplit('\\',1)[1] if (latest_file.index('\\') > -1) else latest_file
 	return render_template("uploadsuccess.html", filename=unlok_pdfName)
 	#class ctx: pass 
     #ctx.filename = latest_file.name
@@ -70,8 +70,11 @@ def serve_pdf(filename):
 def unlock_pdf():
     password =  request.get_json().get('password')  #request.form.get('password')
     uploaded_file = request.get_json().get('filename') #  request.form.get('filename') # request.files['pdfFile']
+    noPassword = False
+    if not password:
+       noPassword = True
 
-    if not password or not uploaded_file:
+    if not uploaded_file:
         return "Missing password or PDF file", 400
 
     try:
@@ -87,8 +90,7 @@ def unlock_pdf():
         pdf_writer = PdfWriter()
         pdf_writer_unloked = PdfWriter()
 
-        # Decrypt the PDF using the provided password
-        if pdf_reader.decrypt(password):
+        if noPassword:
             for page_num in range(len(pdf_reader.pages)):
                 pdf_writer.add_page(pdf_reader.pages[page_num])
                 pdf_writer_unloked.add_page(pdf_reader.pages[page_num])
@@ -105,6 +107,25 @@ def unlock_pdf():
             # Send the unlocked PDF file as an attachment
             # return send_file(temp_output.name, as_attachment=True)
             return  unlok_pdfName
+        else: 
+            # Decrypt the PDF using the provided password
+            if pdf_reader.decrypt(password):
+               for page_num in range(len(pdf_reader.pages)):
+                  pdf_writer.add_page(pdf_reader.pages[page_num])
+                  pdf_writer_unloked.add_page(pdf_reader.pages[page_num])
+
+               # Write the unlocked PDF to the temporary file
+               pdf_writer.write(temp_output)
+               with  open(filepath_unloked , "wb") as output_stream:
+                  pdf_writer_unloked.write(output_stream)
+
+               # Close the temporary file
+               temp_output.close()
+               unlok_pdfName =  filepath_unloked.rsplit('\\',1)[1]
+               print('unlok_pdfName '+unlok_pdfName, file=sys.stderr)
+               # Send the unlocked PDF file as an attachment
+               # return send_file(temp_output.name, as_attachment=True)
+               return  unlok_pdfName
 
         return "Incorrect password", 400
 
