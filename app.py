@@ -44,13 +44,16 @@ def upload_file():
 
 @app.route("/uploaded")
 def upload_success_pdf():
-	list_of_files = glob.glob(app.config["UPLOAD_FOLDER"]+"/*")
-	# * means all if need specific format then *.csv
-	latest_file = max(list_of_files, key=os.path.getctime)
-	print(latest_file)
-	unlok_pdfName =  latest_file.rsplit('\\',1)[1] if (latest_file.index('\\') > -1) else latest_file
-	return render_template("uploadsuccess.html", filename=unlok_pdfName)
-	#class ctx: pass 
+    list_of_files = glob.glob(app.config["UPLOAD_FOLDER"]+"/*")
+    # * means all if need specific format then *.csv
+    latest_file = max(list_of_files, key=os.path.getctime)
+    print(latest_file)
+    if (latest_file.find('\\') > -1):
+        unlok_pdfName = latest_file.rsplit('\\',1)[1]
+    else:
+        unlok_pdfName = os.path.basename(latest_file)
+    return render_template("uploadsuccess.html", filename=unlok_pdfName)
+    #class ctx: pass 
     #ctx.filename = latest_file.name
     #setattr(ctx, 'size', ' ')
     #context = { "name": "", "age": "" }
@@ -102,7 +105,7 @@ def unlock_pdf():
 
             # Close the temporary file
             temp_output.close()
-            unlok_pdfName =  filepath_unloked.rsplit('\\',1)[1]
+            unlok_pdfName =  os.path.basename(filepath_unloked) #.rsplit('\\',1)[1]
             print('unlok_pdfName '+unlok_pdfName, file=sys.stderr)
             # Send the unlocked PDF file as an attachment
             # return send_file(temp_output.name, as_attachment=True)
@@ -121,7 +124,7 @@ def unlock_pdf():
 
                # Close the temporary file
                temp_output.close()
-               unlok_pdfName =  filepath_unloked.rsplit('\\',1)[1]
+               unlok_pdfName =  os.path.basename(filepath_unloked) #.rsplit('\\',1)[1]
                print('unlok_pdfName '+unlok_pdfName, file=sys.stderr)
                # Send the unlocked PDF file as an attachment
                # return send_file(temp_output.name, as_attachment=True)
